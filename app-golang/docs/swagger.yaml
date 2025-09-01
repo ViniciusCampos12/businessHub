@@ -1,0 +1,181 @@
+definitions:
+  github_com_ViniciusCampos12_businessHub_app-golang_internal_domain_entities.Address:
+    properties:
+      city:
+        example: Maua
+        type: string
+      complement:
+        example: Perto do Mercado X
+        type: string
+      neighborhood:
+        example: Jardins
+        type: string
+      postal_code:
+        example: 123-45678
+        maxLength: 9
+        minLength: 8
+        type: string
+      state:
+        example: SP
+        type: string
+      street:
+        example: Rua teste
+        type: string
+    required:
+    - city
+    - neighborhood
+    - postal_code
+    - state
+    - street
+    type: object
+  github_com_ViniciusCampos12_businessHub_app-golang_internal_domain_entities.Company:
+    properties:
+      address:
+        $ref: '#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_domain_entities.Address'
+      document:
+        example: 19.862.056/0002-23
+        type: string
+      fantasy_name:
+        example: My Company
+        type: string
+      social_reason:
+        example: My Company LTDA
+        type: string
+      total_employees:
+        example: 100
+        minimum: 0
+        type: integer
+      total_employees_pwd:
+        example: 1
+        minimum: 0
+        type: integer
+    required:
+    - address
+    - document
+    - fantasy_name
+    - social_reason
+    type: object
+  github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.ErrorResponse:
+    properties:
+      error:
+        type: string
+      success:
+        type: boolean
+    type: object
+  github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.SuccessResponse:
+    properties:
+      data: {}
+      success:
+        type: boolean
+    type: object
+info:
+  contact: {}
+paths:
+  /api/companies:
+    get:
+      description: list all companies
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.SuccessResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.ErrorResponse'
+      summary: list all companies
+      tags:
+      - Companies
+    post:
+      consumes:
+      - application/json
+      description: Create a new company in businessHub
+      parameters:
+      - description: Company Data
+        in: body
+        name: company
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_domain_entities.Company'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.ErrorResponse'
+      summary: create a new company
+      tags:
+      - Companies
+  /api/companies/{id}:
+    delete:
+      description: delete a existing company in businessHub
+      parameters:
+      - description: Company ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.ErrorResponse'
+      summary: delete a existing company
+      tags:
+      - Companies
+    put:
+      consumes:
+      - application/json
+      description: edit a existing company in businessHub
+      parameters:
+      - description: Company Data
+        in: body
+        name: company
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_domain_entities.Company'
+      - description: Company ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.ErrorResponse'
+      summary: edit a existing company
+      tags:
+      - Companies
+swagger: "2.0"

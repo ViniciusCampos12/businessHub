@@ -1,0 +1,266 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {}
+    },
+    "paths": {
+        "/api/companies": {
+            "get": {
+                "description": "list all companies",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Companies"
+                ],
+                "summary": "list all companies",
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.SuccessResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Create a new company in businessHub",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Companies"
+                ],
+                "summary": "create a new company",
+                "parameters": [
+                    {
+                        "description": "Company Data",
+                        "name": "company",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_domain_entities.Company"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/companies/{id}": {
+            "put": {
+                "description": "edit a existing company in businessHub",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Companies"
+                ],
+                "summary": "edit a existing company",
+                "parameters": [
+                    {
+                        "description": "Company Data",
+                        "name": "company",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_domain_entities.Company"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "Company ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.SuccessResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "delete a existing company in businessHub",
+                "tags": [
+                    "Companies"
+                ],
+                "summary": "delete a existing company",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Company ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "github_com_ViniciusCampos12_businessHub_app-golang_internal_domain_entities.Address": {
+            "type": "object",
+            "required": [
+                "city",
+                "neighborhood",
+                "postal_code",
+                "state",
+                "street"
+            ],
+            "properties": {
+                "city": {
+                    "type": "string",
+                    "example": "Maua"
+                },
+                "complement": {
+                    "type": "string",
+                    "example": "Perto do Mercado X"
+                },
+                "neighborhood": {
+                    "type": "string",
+                    "example": "Jardins"
+                },
+                "postal_code": {
+                    "type": "string",
+                    "maxLength": 9,
+                    "minLength": 8,
+                    "example": "123-45678"
+                },
+                "state": {
+                    "type": "string",
+                    "example": "SP"
+                },
+                "street": {
+                    "type": "string",
+                    "example": "Rua teste"
+                }
+            }
+        },
+        "github_com_ViniciusCampos12_businessHub_app-golang_internal_domain_entities.Company": {
+            "type": "object",
+            "required": [
+                "address",
+                "document",
+                "fantasy_name",
+                "social_reason"
+            ],
+            "properties": {
+                "address": {
+                    "$ref": "#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_domain_entities.Address"
+                },
+                "document": {
+                    "type": "string",
+                    "example": "19.862.056/0002-23"
+                },
+                "fantasy_name": {
+                    "type": "string",
+                    "example": "My Company"
+                },
+                "social_reason": {
+                    "type": "string",
+                    "example": "My Company LTDA"
+                },
+                "total_employees": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "example": 100
+                },
+                "total_employees_pwd": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "example": 1
+                }
+            }
+        },
+        "github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.SuccessResponse": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        }
+    }
+}

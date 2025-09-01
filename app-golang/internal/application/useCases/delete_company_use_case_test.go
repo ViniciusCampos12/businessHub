@@ -1,0 +1,68 @@
+package usecases
+
+import (
+	"testing"
+
+	"github.com/ViniciusCampos12/businessHub/app-golang/internal/domain/entities"
+	"github.com/ViniciusCampos12/businessHub/app-golang/internal/infra/adapters"
+	inmemoryrepository "github.com/ViniciusCampos12/businessHub/app-golang/internal/infra/database/inMemoryRepository"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+func TestShouldDeleteCompanyIfExists(t *testing.T) {
+	mockRepo := &inmemoryrepository.MockRepository{Companies: make(map[string]*entities.Company)}
+	useCase := &DeleteCompany{Repo: mockRepo, Broker: &adapters.MockPublisher{Fail: false}}
+
+	mongoId := primitive.NewObjectID()
+
+	company := &entities.Company{
+		ID:                mongoId,
+		Document:          "99862056000112",
+		FantasyName:       "Old Company",
+		SocialReason:      "Old Company LTDA",
+		TotalEmployees:    10,
+		TotalEmployeesPwd: 1,
+		Address: entities.Address{
+			Street:       "Rua teste",
+			Complement:   "string",
+			PostalCode:   "12345678",
+			Neighborhood: "Jardins",
+			City:         "Maua",
+			State:        "SP",
+		},
+	}
+
+	mockRepo.Create(company)
+
+	err := useCase.Handle(mongoId.Hex())
+
+	if err != nil {
+		t.Fatalf("expected nil error, got %v", err)
+	}
+
+	_, foundErr := mockRepo.FindById(mongoId.Hex())
+	if foundErr != nil {
+		t.Fatalf("unexpected error: %v", foundErr)
+	}
+
+	if len(mockRepo.Companies) != 0 {
+		t.Fatalf("expected repository to be empty, got %d items", len(mockRepo.Companies))
+	}
+}
+
+func TestShouldNotDeleteCompanyIfNotExists(t *testing.T) {
+	mockRepo := &inmemoryrepository.MockRepository{Companies: make(map[string]*entities.Company)}
+	useCase := &DeleteCompany{Repo: mockRepo, Broker: &adapters.MockPublisher{Fail: false}}
+
+	mongoId := primitive.NewObjectID()
+
+	err := useCase.Handle(mongoId.Hex())
+
+	if err == nil {
+		t.Fatalf("expected error, got nil")
+	}
+
+	if err.Error() != "company not found" {
+		t.Fatalf("expected 'company not found', got %v", err)
+	}
+}
