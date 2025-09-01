@@ -77,8 +77,8 @@ paths:
       produces:
       - application/json
       responses:
-        "201":
-          description: Created
+        "200":
+          description: Ok
           schema:
             $ref: '#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.SuccessResponse'
         "500":
@@ -159,8 +159,8 @@ paths:
       produces:
       - application/json
       responses:
-        "201":
-          description: Created
+        "200":
+          description: Ok
           schema:
             $ref: '#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.SuccessResponse'
         "400":

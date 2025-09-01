@@ -26,8 +26,8 @@ const docTemplate = `{
                 ],
                 "summary": "list all companies",
                 "responses": {
-                    "201": {
-                        "description": "Created",
+                    "200": {
+                        "description": "Ok",
                         "schema": {
                             "$ref": "#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.SuccessResponse"
                         }
@@ -117,8 +117,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "201": {
-                        "description": "Created",
+                    "200": {
+                        "description": "Ok",
                         "schema": {
                             "$ref": "#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.SuccessResponse"
                         }
