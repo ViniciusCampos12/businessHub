@@ -12,12 +12,12 @@ import (
 // swagger:model Company
 type Company struct {
 	ID                primitive.ObjectID `json:"id" bson:"_id,omitempty"  swaggerignore:"true"`
-	Document          string             `json:"document" bson:"document" validate:"required" example:"19.862.056/0002-23"`
-	FantasyName       string             `json:"fantasy_name" bson:"fantasy_name" validate:"required" example:"My Company"`
-	SocialReason      string             `json:"social_reason" bson:"social_reason" validate:"required" example:"My Company LTDA"`
-	Address           Address            `json:"address" bson:"address" validate:"required,dive"`
-	TotalEmployees    int                `json:"total_employees" bson:"total_employees" validate:"gte=0" example:"100"`
-	TotalEmployeesPwd int                `json:"total_employees_pwd" bson:"total_employees_pwd" validate:"gte=0" example:"1"`
+	Document          string             `json:"document" bson:"document" binding:"required,min=14,max=18" example:"19.862.056/0002-23"`
+	FantasyName       string             `json:"fantasy_name" bson:"fantasy_name" binding:"required" example:"My Company"`
+	SocialReason      string             `json:"social_reason" bson:"social_reason" binding:"required" example:"My Company LTDA"`
+	Address           Address            `json:"address" bson:"address" binding:"required"`
+	TotalEmployees    int                `json:"total_employees" bson:"total_employees" binding:"gte=0" example:"100"`
+	TotalEmployeesPwd int                `json:"total_employees_pwd" bson:"total_employees_pwd" binding:"gte=0" example:"1"`
 	UpdatedAt         time.Time          `json:"updated_at" bson:"updated_at" swaggerignore:"true"`
 	CreatedAt         time.Time          `json:"created_at" bson:"created_at" swaggerignore:"true"`
 }

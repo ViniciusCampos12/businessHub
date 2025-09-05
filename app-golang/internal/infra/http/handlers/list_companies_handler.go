@@ -17,7 +17,7 @@ type ListCompanies struct {
 // @Description list all companies
 // @Tags Companies
 // @Produce json
-// @Success 200 {object} helpers.SuccessResponse
+// @Success 200 {object} viewmodels.CompaniesListResponse
 // @Failure 500 {object} helpers.ErrorResponse
 // @Router /api/companies [get]
 func (lc *ListCompanies) Execute(c *gin.Context) {

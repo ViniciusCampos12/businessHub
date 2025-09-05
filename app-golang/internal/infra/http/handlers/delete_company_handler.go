@@ -18,12 +18,11 @@ type DeleteCompany struct {
 // @Tags Companies
 // @Param id path string true "Company ID"
 // @Success 204
-// @Failure 404 {object} helpers.ErrorResponse
+// @Failure 404 {object} viewmodels.CompanyNotFoundResponse
 // @Failure 500 {object} helpers.ErrorResponse
 // @Router /api/companies/{id} [delete]
 func (dc *DeleteCompany) Execute(c *gin.Context) {
 	id := c.Param("id")
-
 	err := dc.UseCase.Handle(id)
 
 	if err != nil {

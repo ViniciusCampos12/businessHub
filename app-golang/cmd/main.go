@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"net/http"
 	"os"
 	"time"
 
@@ -60,6 +61,19 @@ func main() {
 	rbmqPub := initRabbitMq()
 	defer rbmqPub.Close()
 	r := gin.Default()
+
+	r.Use(func(c *gin.Context) {
+		c.Next()
+
+		if len(c.Errors) > 0 && !c.Writer.Written() {
+			for _, e := range c.Errors {
+				log.Printf("[GIN-ERROR] %v\n", e.Err)
+			}
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "Internal Server Error",
+			})
+		}
+	})
 
 	api := r.Group("/api")
 	api.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

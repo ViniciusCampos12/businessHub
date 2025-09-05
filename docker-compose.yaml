@@ -4,7 +4,7 @@ services:
   go-app:
     build:
       context: ./app-golang
-      target: prod
+      target: dev
     container_name: go-app
     tty: true
     restart: unless-stopped
@@ -23,7 +23,7 @@ services:
   go-app-test:
     build:
       context: ./app-golang
-      target: builder
+      target: dev
     container_name: go-app-test
     tty: true
     volumes:

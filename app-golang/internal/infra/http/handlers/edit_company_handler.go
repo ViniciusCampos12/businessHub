@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strings"
 
 	usecases "github.com/ViniciusCampos12/businessHub/app-golang/internal/application/useCases"
 	"github.com/ViniciusCampos12/businessHub/app-golang/internal/domain/entities"
@@ -21,10 +22,10 @@ type EditCompany struct {
 // @Produce json
 // @Param company body entities.Company true "Company Data"
 // @Param id path string true "Company ID"
-// @Success 200 {object} helpers.SuccessResponse
-// @Failure 400 {object} helpers.ErrorResponse
-// @Failure 404 {object} helpers.ErrorResponse
-// @Failure 409 {object} helpers.ErrorResponse
+// @Success 200 {object} viewmodels.CompanyUpdatedResponse
+// @Failure 400 {object} viewmodels.CompanyBadRequestResponse
+// @Failure 404 {object} viewmodels.CompanyNotFoundResponse
+// @Failure 500 {object} helpers.ErrorResponse
 // @Router /api/companies/{id} [put]
 func (e *EditCompany) Execute(c *gin.Context) {
 	id := c.Param("id")
@@ -41,7 +42,13 @@ func (e *EditCompany) Execute(c *gin.Context) {
 			helpers.ResponseError(c, err, http.StatusNotFound)
 			return
 		}
-		helpers.ResponseError(c, err, http.StatusConflict)
+
+		if strings.HasPrefix(err.Error(), "Insufficient quota: company must have") {
+			helpers.ResponseError(c, err, http.StatusBadRequest)
+			return
+		}
+
+		helpers.ResponseError(c, err, http.StatusInternalServerError)
 		return
 	}
 
