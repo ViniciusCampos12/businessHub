@@ -46,7 +46,7 @@ func (c *Company) CheckPWDQuota(totalEmployees int, currentPWDs int) error {
 	minPWDs := int(math.Ceil(float64(totalEmployees) * percentage))
 
 	if currentPWDs < minPWDs {
-		return fmt.Errorf("Insufficient quota: company must have %d PWD(s), but has %d (required by Brazilian Law nº 8.213/91, art. 93)", minPWDs, currentPWDs)
+		return fmt.Errorf("insufficient quota: company must have %d PWD(s), but has %d (required by Brazilian Law nº 8.213/91, art. 93)", minPWDs, currentPWDs)
 	}
 
 	return nil
