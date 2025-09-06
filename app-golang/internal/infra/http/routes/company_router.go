@@ -9,19 +9,17 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func SetupCompanyRouter(rg *gin.RouterGroup, mongo *mongo.Database, rbmqPub *adapters.RabbitMqAdapter) {
+func SetupCompanyRouter(companies *gin.RouterGroup, mongo *mongo.Database, rbmqPub *adapters.RabbitMqAdapter) {
 	createCompanyHandler := createCompanyHandlerFactory(mongo, rbmqPub)
 	listCompaniesHandler := listCompaniesHandlerFactory(mongo, rbmqPub)
 	editCompanyHandler := editCompanyHandlerFactory(mongo, rbmqPub)
 	deleteCompanyHandler := deleteCompanyHandlerFactory(mongo, rbmqPub)
 
-	companies := rg.Group("/companies")
-	{
-		companies.GET("/", listCompaniesHandler.Execute)
-		companies.POST("/", createCompanyHandler.Execute)
-		companies.PUT("/:id", editCompanyHandler.Execute)
-		companies.DELETE("/:id", deleteCompanyHandler.Execute)
-	}
+	companies.GET("/", listCompaniesHandler.Execute)
+	companies.POST("/", createCompanyHandler.Execute)
+	companies.PUT("/:id", editCompanyHandler.Execute)
+	companies.DELETE("/:id", deleteCompanyHandler.Execute)
+
 }
 
 func createCompanyHandlerFactory(mongo *mongo.Database, rbmqPub *adapters.RabbitMqAdapter) *handlers.CreateCompany {

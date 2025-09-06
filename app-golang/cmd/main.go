@@ -14,15 +14,33 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	_ "github.com/ViniciusCampos12/businessHub/app-golang/docs"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-func initMongo() *mongo.Database {
+var mongoDB *mongo.Database
+var ctx context.Context
+var rbmqPub *adapters.RabbitMqAdapter
+
+func init() {
+	mongoDB, ctx = mongoStart()
+	rbmqPub = rabbitmqStart()
+}
+
+func main() {
+	defer rbmqPub.Close()
+	defer mongoDB.Client().Disconnect(ctx)
+	r := gin.Default()
+
+	r.Use(errorMiddleware())
+	routes.SetupBaseRouter(r, mongoDB, rbmqPub)
+
+	r.Run("0.0.0.0:8080")
+}
+
+func mongoStart() (*mongo.Database, context.Context) {
 	mongoURI, MongoDbDatabase := os.Getenv("MONGO_URI"), os.Getenv("DB_DATABASE")
 
 	if MongoDbDatabase == "" || mongoURI == "" {
-		log.Fatal("Environment variables MONGO_URI are not defined")
+		panic("Environment variables MONGO_URI are not defined")
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -32,53 +50,36 @@ func initMongo() *mongo.Database {
 
 	client, err := mongo.Connect(ctx, clientOpts)
 	if err != nil {
-		log.Fatal("Failed to connect to MongoDB:", err)
+		panic(err)
 	}
 
 	if err := client.Ping(ctx, nil); err != nil {
-		log.Fatal("MongoDB is not responding:", err)
+		panic(err)
 	}
 
 	log.Println("MongoDB connected successfully")
 
-	return client.Database(MongoDbDatabase)
+	return client.Database(MongoDbDatabase), context.Background()
 }
 
-func initRabbitMq() *adapters.RabbitMqAdapter {
+func rabbitmqStart() *adapters.RabbitMqAdapter {
 	rabbitmqUrl := os.Getenv("RABBITMQ_URL")
 
 	if rabbitmqUrl == "" {
-		log.Fatal("Environment variables RABBITMQ_URL are not defined")
+		panic("Environment variables RABBITMQ_URL are not defined")
 	}
 
-	publisher := adapters.NewRabbitMqAdapter(rabbitmqUrl)
-
-	return publisher
+	return adapters.NewRabbitMqAdapter(rabbitmqUrl)
 }
 
-func main() {
-	mongo := initMongo()
-	rbmqPub := initRabbitMq()
-	defer rbmqPub.Close()
-	r := gin.Default()
-
-	r.Use(func(c *gin.Context) {
+func errorMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
 		c.Next()
-
 		if len(c.Errors) > 0 && !c.Writer.Written() {
 			for _, e := range c.Errors {
 				log.Printf("[GIN-ERROR] %v\n", e.Err)
 			}
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": "Internal Server Error",
-			})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
 		}
-	})
-
-	api := r.Group("/api")
-	api.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-
-	routes.SetupCompanyRouter(api, mongo, rbmqPub)
-
-	r.Run("0.0.0.0:8080")
+	}
 }
