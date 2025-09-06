@@ -40,9 +40,9 @@ Usuário e senha do RabbitMQ configurados no `.env`
 docker exec -it go-app-test sh
 ```
 
-2. Execute os testes com verbose:  
+2. Rode os testes com gotestsum para uma visualização mais amigável dos resultados.:  
 ```bash
-go test -v ./...
+gotestsum --format testname
 ```
 
 3. Para gerar cobertura dos testes e relatório HTML:  
