@@ -6,6 +6,7 @@ RUN apk add --no-cache git bash curl
 
 RUN go install github.com/air-verse/air@latest
 RUN go install github.com/swaggo/swag/cmd/swag@latest
+RUN go install gotest.tools/gotestsum@latest
 
 COPY go.* ./
 RUN go mod download
