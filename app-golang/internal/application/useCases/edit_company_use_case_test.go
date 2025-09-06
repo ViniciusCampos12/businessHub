@@ -15,7 +15,7 @@ func TestShouldEditCompanyIfExists(t *testing.T) {
 
 	mongoId := primitive.NewObjectID()
 
-	original := &entities.Company{
+	companyDummie := &entities.Company{
 		ID:                mongoId,
 		Document:          "99862056000112",
 		FantasyName:       "Old Company",
@@ -32,9 +32,9 @@ func TestShouldEditCompanyIfExists(t *testing.T) {
 		},
 	}
 
-	mockRepo.Create(original)
+	mockRepo.Create(companyDummie)
 
-	update := &entities.Company{
+	companyDummieUpdate := &entities.Company{
 		FantasyName:       "My Company",
 		SocialReason:      "My Company LTDA",
 		TotalEmployees:    150,
@@ -49,7 +49,7 @@ func TestShouldEditCompanyIfExists(t *testing.T) {
 		},
 	}
 
-	hasUpdated, err := useCase.Handle(mongoId.Hex(), update)
+	hasUpdated, err := useCase.Handle(mongoId.Hex(), companyDummieUpdate)
 
 	if err != nil {
 		t.Fatalf("expected nil error, got %v", err)
@@ -71,7 +71,7 @@ func TestShouldNotEditCompanyIfNotExists(t *testing.T) {
 
 	mongoId := primitive.NewObjectID()
 
-	update := &entities.Company{
+	companyDummieUpdate := &entities.Company{
 		FantasyName:       "My Company",
 		SocialReason:      "My Company LTDA",
 		TotalEmployees:    15,
@@ -86,7 +86,7 @@ func TestShouldNotEditCompanyIfNotExists(t *testing.T) {
 		},
 	}
 
-	hasUpdated, err := useCase.Handle(mongoId.Hex(), update)
+	hasUpdated, err := useCase.Handle(mongoId.Hex(), companyDummieUpdate)
 
 	if err == nil {
 		t.Fatalf("expected error, got nil")
@@ -110,7 +110,7 @@ func TestShouldNotEditCompanyIfPWDQuotaInvalid(t *testing.T) {
 
 	mongoId := primitive.NewObjectID()
 
-	original := &entities.Company{
+	companyDummie := &entities.Company{
 		ID:                mongoId,
 		Document:          "99862056000112",
 		FantasyName:       "Old Company",
@@ -127,7 +127,7 @@ func TestShouldNotEditCompanyIfPWDQuotaInvalid(t *testing.T) {
 		},
 	}
 
-	mockRepo.Create(original)
+	mockRepo.Create(companyDummie)
 
 	update := &entities.Company{
 		FantasyName:       "My Company",

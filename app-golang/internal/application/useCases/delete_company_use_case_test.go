@@ -15,7 +15,7 @@ func TestShouldDeleteCompanyIfExists(t *testing.T) {
 
 	mongoId := primitive.NewObjectID()
 
-	company := &entities.Company{
+	companyDummie := &entities.Company{
 		ID:                mongoId,
 		Document:          "99862056000112",
 		FantasyName:       "Old Company",
@@ -32,7 +32,7 @@ func TestShouldDeleteCompanyIfExists(t *testing.T) {
 		},
 	}
 
-	mockRepo.Create(company)
+	mockRepo.Create(companyDummie)
 
 	err := useCase.Handle(mongoId.Hex())
 

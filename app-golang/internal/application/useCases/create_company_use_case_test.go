@@ -12,7 +12,7 @@ func TestShouldCreateCompanyIfNotExists(t *testing.T) {
 	mockRepo := &inmemoryrepository.MockRepository{Companies: make(map[string]*entities.Company)}
 	useCase := &CreateCompany{Repo: mockRepo, Broker: &adapters.MockPublisher{Fail: false}}
 
-	input := &entities.Company{
+	companyDummie := &entities.Company{
 		Document:          "99862056000112",
 		FantasyName:       "My Company",
 		SocialReason:      "My Company LTDA",
@@ -28,7 +28,7 @@ func TestShouldCreateCompanyIfNotExists(t *testing.T) {
 		},
 	}
 
-	result, err := useCase.Handle(input)
+	result, err := useCase.Handle(companyDummie)
 
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
@@ -48,7 +48,7 @@ func TestShouldNotCreateCompanyIfAlreadyExists(t *testing.T) {
 	mockRepo := &inmemoryrepository.MockRepository{Companies: make(map[string]*entities.Company)}
 	useCase := &CreateCompany{Repo: mockRepo, Broker: &adapters.MockPublisher{Fail: false}}
 
-	input := &entities.Company{
+	companyDummie := &entities.Company{
 		Document:          "99862056000112",
 		FantasyName:       "My Company",
 		SocialReason:      "My Company LTDA",
@@ -64,9 +64,9 @@ func TestShouldNotCreateCompanyIfAlreadyExists(t *testing.T) {
 		},
 	}
 
-	mockRepo.Create(input)
+	mockRepo.Create(companyDummie)
 
-	existingCompany, err := useCase.Handle(input)
+	existingCompany, err := useCase.Handle(companyDummie)
 
 	if existingCompany != nil {
 		t.Fatalf("expected nil, got %v", existingCompany)
@@ -81,7 +81,7 @@ func TestShouldNotCreateCompanyIfPWDQuotaIsInvalid(t *testing.T) {
 	mockRepo := &inmemoryrepository.MockRepository{Companies: make(map[string]*entities.Company)}
 	useCase := &CreateCompany{Repo: mockRepo, Broker: &adapters.MockPublisher{Fail: false}}
 
-	input := &entities.Company{
+	companyDummie := &entities.Company{
 		Document:          "99862056000112",
 		FantasyName:       "My Company",
 		SocialReason:      "My Company LTDA",
@@ -97,7 +97,7 @@ func TestShouldNotCreateCompanyIfPWDQuotaIsInvalid(t *testing.T) {
 		},
 	}
 
-	existingCompany, err := useCase.Handle(input)
+	existingCompany, err := useCase.Handle(companyDummie)
 
 	if existingCompany != nil {
 		t.Fatalf("expected nil, got %v", existingCompany)

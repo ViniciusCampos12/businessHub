@@ -10,7 +10,7 @@ import (
 
 func TestReturnListOfCompanies(t *testing.T) {
 	mockRepo := &inmemoryrepository.MockRepository{Companies: make(map[string]*entities.Company)}
-	useCase := &ListCompanies{Repo: mockRepo,  Broker: &adapters.MockPublisher{Fail: false}}
+	useCase := &ListCompanies{Repo: mockRepo, Broker: &adapters.MockPublisher{Fail: false}}
 
 	companies, err := useCase.Handle()
 
