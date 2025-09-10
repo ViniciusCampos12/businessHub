@@ -15,10 +15,10 @@ COPY . .
 
 RUN adduser -D -u 1000 appuser
 
-ENV GOMODCACHE=/app/.cache/go-mod
-ENV GOCACHE=/app/.cache/go-build
-
-RUN mkdir -p /app/.cache && chown -R appuser:appuser /app/.cache
+ENV GOPATH=/app/.cache/go
+ENV GOMODCACHE=$GOPATH/pkg/mod
+ENV GOCACHE=$GOPATH/cache
+RUN mkdir -p /app/.cache/go && chown -R appuser:appuser /app/.cache
 
 USER appuser
 
