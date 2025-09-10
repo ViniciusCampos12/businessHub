@@ -64,10 +64,26 @@ docker compose up -d --build
 ```
 
 - O arquivo `.env` deve conter todas as variáveis de configuração necessárias, incluindo:  
-  - `GO_PORT`  
-  - `RABBITMQ_DEFAULT_USER`  
-  - `RABBITMQ_DEFAULT_PASS`  
-  - `RABBITMQ_PORT`  
-  - `DB_HOST`  
-  - `DB_PORT`  
-  - `DB_DATABASE`
+  - `RABBITMQ_URI`  
+  - `MONGO_URI`  
+  - `RABBITMQ_USER`  
+  - `RABBITMQ_PASW`  
+  - `MONGO_DATABASE`  
+  - `RABBITMQ_COMPANY_QUEUE`  
+  - `WEBSOCKET_URL`
+  - `TARGET`
+  - `APP_GOLANG_PORT`
+  - `SERVICE_GOLANG_PORT`
+  - `MONGO_EXTERNAL_PORT`
+
+## Integração via WebSockets com outro serviço
+
+O serviço `service-golang` é um microsserviço que consome mensagens da fila do RabbitMQ, publicadas pelo `go-app`.
+
+Para testar a integração:
+
+1. Abra o arquivo `index.html` na raiz do projeto no navegador e conecte-se ao WebSocket.
+2. Realize qualquer operação no `go-app`.
+3. O evento será enviado para o `service-golang` via RabbitMQ, que:
+   - Armazena o evento na tabela `outbox_events` do banco de dados.
+   - Publica o evento para todos os clientes conectados ao WebSocket.
