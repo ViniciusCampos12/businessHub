@@ -1,6 +1,9 @@
 package routes
 
 import (
+	"fmt"
+	"log"
+
 	usecases "github.com/ViniciusCampos12/businessHub/app-golang/internal/application/useCases"
 	"github.com/ViniciusCampos12/businessHub/app-golang/internal/infra/adapters"
 	"github.com/ViniciusCampos12/businessHub/app-golang/internal/infra/database/repositories"
@@ -10,26 +13,29 @@ import (
 )
 
 func SetupCompanyRouter(companies *gin.RouterGroup, mongo *mongo.Database, rbmqPub *adapters.RabbitMqAdapter) {
-	createCompanyHandler := createCompanyHandlerFactory(mongo, rbmqPub)
-	listCompaniesHandler := listCompaniesHandlerFactory(mongo, rbmqPub)
-	editCompanyHandler := editCompanyHandlerFactory(mongo, rbmqPub)
-	deleteCompanyHandler := deleteCompanyHandlerFactory(mongo, rbmqPub)
+	companyRepo, err := loadCompanyRepo(mongo, repositories.NewCompanyRepository)
+
+	if err != nil {
+		log.Fatalf("failed to load repository: %v", err)
+	}
+
+	createCompanyHandler := createCompanyHandlerFactory(companyRepo, rbmqPub)
+	listCompaniesHandler := listCompaniesHandlerFactory(companyRepo, rbmqPub)
+	editCompanyHandler := editCompanyHandlerFactory(companyRepo, rbmqPub)
+	deleteCompanyHandler := deleteCompanyHandlerFactory(companyRepo, rbmqPub)
 
 	companies.GET("/", listCompaniesHandler.Execute)
 	companies.POST("/", createCompanyHandler.Execute)
 	companies.PUT("/:id", editCompanyHandler.Execute)
 	companies.DELETE("/:id", deleteCompanyHandler.Execute)
-
 }
 
-func createCompanyHandlerFactory(mongo *mongo.Database, rbmqPub *adapters.RabbitMqAdapter) *handlers.CreateCompany {
-	companyRepository := &repositories.CompanyRepository{
-		Mongo: mongo,
-	}
+func createCompanyHandlerFactory(repo *repositories.CompanyRepository, rbmqPub *adapters.RabbitMqAdapter) *handlers.CreateCompany {
 	createCompanyUseCase := &usecases.CreateCompany{
-		Repo:   companyRepository,
+		Repo:   repo,
 		Broker: rbmqPub,
 	}
+
 	createCompanyHandler := &handlers.CreateCompany{
 		UseCase: createCompanyUseCase,
 	}
@@ -37,12 +43,9 @@ func createCompanyHandlerFactory(mongo *mongo.Database, rbmqPub *adapters.Rabbit
 	return createCompanyHandler
 }
 
-func listCompaniesHandlerFactory(mongo *mongo.Database, rbmqPub *adapters.RabbitMqAdapter) *handlers.ListCompanies {
-	companyRepository := &repositories.CompanyRepository{
-		Mongo: mongo,
-	}
+func listCompaniesHandlerFactory(repo *repositories.CompanyRepository, rbmqPub *adapters.RabbitMqAdapter) *handlers.ListCompanies {
 	listCompaniesUseCase := &usecases.ListCompanies{
-		Repo:   companyRepository,
+		Repo:   repo,
 		Broker: rbmqPub,
 	}
 	listCompaniesHandler := &handlers.ListCompanies{
@@ -52,12 +55,9 @@ func listCompaniesHandlerFactory(mongo *mongo.Database, rbmqPub *adapters.Rabbit
 	return listCompaniesHandler
 }
 
-func editCompanyHandlerFactory(mongo *mongo.Database, rbmqPub *adapters.RabbitMqAdapter) *handlers.EditCompany {
-	companyRepository := &repositories.CompanyRepository{
-		Mongo: mongo,
-	}
+func editCompanyHandlerFactory(repo *repositories.CompanyRepository, rbmqPub *adapters.RabbitMqAdapter) *handlers.EditCompany {
 	editCompanyUseCase := &usecases.EditCompany{
-		Repo:   companyRepository,
+		Repo:   repo,
 		Broker: rbmqPub,
 	}
 	editCompanyHandler := &handlers.EditCompany{
@@ -67,12 +67,9 @@ func editCompanyHandlerFactory(mongo *mongo.Database, rbmqPub *adapters.RabbitMq
 	return editCompanyHandler
 }
 
-func deleteCompanyHandlerFactory(mongo *mongo.Database, rbmqPub *adapters.RabbitMqAdapter) *handlers.DeleteCompany {
-	companyRepository := &repositories.CompanyRepository{
-		Mongo: mongo,
-	}
+func deleteCompanyHandlerFactory(repo *repositories.CompanyRepository, rbmqPub *adapters.RabbitMqAdapter) *handlers.DeleteCompany {
 	deleteCompanyUseCase := &usecases.DeleteCompany{
-		Repo:   companyRepository,
+		Repo:   repo,
 		Broker: rbmqPub,
 	}
 	deleteCompanyHandler := &handlers.DeleteCompany{
@@ -80,4 +77,14 @@ func deleteCompanyHandlerFactory(mongo *mongo.Database, rbmqPub *adapters.Rabbit
 	}
 
 	return deleteCompanyHandler
+}
+
+func loadCompanyRepo(mongo *mongo.Database, newRepo func(db *mongo.Database) (*repositories.CompanyRepository, error)) (*repositories.CompanyRepository, error) {
+	repo, err := newRepo(mongo)
+
+	if err != nil {
+		return nil, fmt.Errorf("fail to load repo in handlers: %w", err)
+	}
+
+	return repo, nil
 }

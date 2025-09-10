@@ -1,14 +1,17 @@
 package handlers
 
 import (
-	"log"
+	"context"
+	"errors"
+	"fmt"
 	"net/http"
-	"strings"
 
 	usecases "github.com/ViniciusCampos12/businessHub/app-golang/internal/application/useCases"
 	"github.com/ViniciusCampos12/businessHub/app-golang/internal/domain/entities"
+	"github.com/ViniciusCampos12/businessHub/app-golang/internal/fails"
 	"github.com/ViniciusCampos12/businessHub/app-golang/internal/helpers"
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 )
 
 type CreateCompany struct {
@@ -30,27 +33,35 @@ type CreateCompany struct {
 func (h *CreateCompany) Execute(c *gin.Context) {
 	var input entities.Company
 	if err := c.ShouldBindJSON(&input); err != nil {
-		helpers.ResponseError(c, err, http.StatusBadRequest)
+		err = fmt.Errorf("%w: %v", fails.ErrValidation, err)
+		createHandlerError(err, c)
 		return
 	}
 
-	newCompany, err := h.UseCase.Handle(&input)
+	newCompany, err := h.UseCase.Handle(&input, c.Request.Context())
 
 	if err != nil {
-		if err.Error() == "company already exists" {
-			helpers.ResponseError(c, err, http.StatusConflict)
-			return
-		}
-
-		if strings.HasPrefix(err.Error(), "Insufficient quota: company must have") {
-			helpers.ResponseError(c, err, http.StatusBadRequest)
-			return
-		}
-
-		log.Printf("%v", err.Error())
-		helpers.ResponseError(c, nil, http.StatusInternalServerError)
+		createHandlerError(err, c)
 		return
 	}
 
 	helpers.ResponseSuccess(c, newCompany, http.StatusCreated)
+}
+
+func createHandlerError(err error, c *gin.Context) {
+	switch {
+	case errors.Is(err, fails.ErrValidation):
+		log.Errorf("validation error: %v", err)
+		helpers.ResponseError(c, err, http.StatusBadRequest)
+	case errors.Is(err, fails.ErrCompanyAlreadyExists):
+		helpers.ResponseError(c, err, http.StatusConflict)
+	case errors.Is(err, fails.ErrInsufficientPWDQuota):
+		helpers.ResponseError(c, err, http.StatusBadRequest)
+	case errors.Is(err, context.Canceled):
+		log.Errorf("request cancelled by client")
+		return
+	default:
+		log.Errorf("unexpected error: %v", err)
+		helpers.ResponseError(c, err, http.StatusInternalServerError)
+	}
 }

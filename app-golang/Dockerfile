@@ -14,6 +14,12 @@ RUN go mod download
 COPY . .
 
 RUN adduser -D -u 1000 appuser
+
+ENV GOMODCACHE=/app/.cache/go-mod
+ENV GOCACHE=/app/.cache/go-build
+
+RUN mkdir -p /app/.cache && chown -R appuser:appuser /app/.cache
+
 USER appuser
 
 FROM golang:1.25-alpine AS build

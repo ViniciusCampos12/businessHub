@@ -1,13 +1,15 @@
 package usecases
 
 import (
-	"encoding/json"
-	"errors"
-	"time"
+	"context"
+	"fmt"
 
 	"github.com/ViniciusCampos12/businessHub/app-golang/internal/domain/entities"
 	"github.com/ViniciusCampos12/businessHub/app-golang/internal/domain/interfaces"
+	valueobjects "github.com/ViniciusCampos12/businessHub/app-golang/internal/domain/valueObjects"
+	"github.com/ViniciusCampos12/businessHub/app-golang/internal/fails"
 	"github.com/google/uuid"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type EditCompany struct {
@@ -15,50 +17,54 @@ type EditCompany struct {
 	Broker interfaces.IMessageBroker
 }
 
-func (ec *EditCompany) Handle(id string, c *entities.Company) (bool, error) {
-	existsCompany, err := ec.Repo.FindById(id)
+func (ec *EditCompany) Handle(objId primitive.ObjectID, c *entities.Company, ctx context.Context) (bool, error) {
+	existsCompany, err := ec.Repo.FindById(objId, ctx)
 
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("fail to find by id: %w", err)
 	}
 
 	if existsCompany == nil {
-		return false, errors.New("company not found")
+		return false, fails.ErrCompanyNotFound
+	}
+
+	documentUsed, err := ec.Repo.FindByDocument(c.Document, ctx)
+
+	if err != nil {
+		return false, fmt.Errorf("fail to find by document: %w", err)
+	}
+
+	if documentUsed != nil {
+		return false, fails.ErrCompanyDocumentIsAlreadyInUse
 	}
 
 	err = c.CheckPWDQuota(c.TotalEmployees, c.TotalEmployeesPwd)
 
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("fail to consult pwd quota: %w", err)
 	}
 
-	c.Document = existsCompany.Document
-	c.Address.UnsmaskPostalCode()
-	c.UpdatedAt = time.Now()
+	c.PrepareForUpdate()
 
-	hasUpdated, err := ec.Repo.Save(id, c)
+	err = ec.Repo.Save(objId, c, ctx)
 
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("fail to updated: %w", err)
 	}
 
-	if !hasUpdated {
-		return false, errors.New("update failed")
+	e := valueobjects.Event{
+		Message: "company_edited",
+		EventId: uuid.New().String(),
+		Data:    existsCompany,
 	}
 
-	message := map[string]interface{}{
-		"Message": "company_edited",
-		"EventId": uuid.New().String(),
-		"Data": existsCompany,
-	}
-
-	payload, err := json.Marshal(message)
+	encodedEvent, err := e.ToJson()
 
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("fail convert event to json: %w", err)
 	}
 
-	ec.Broker.Publish("businesshub-logger", payload)
+	ec.Broker.Publish("businesshub-logger", encodedEvent)
 
 	return true, nil
 }

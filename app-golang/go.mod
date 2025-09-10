@@ -10,7 +10,10 @@ require (
 	go.mongodb.org/mongo-driver v1.17.4
 )
 
-require github.com/google/uuid v1.6.0 // indirect
+require (
+	github.com/google/uuid v1.6.0 // indirect
+	github.com/sirupsen/logrus v1.9.3 // indirect
+)
 
 require (
 	github.com/KyleBanks/depth v1.2.1 // indirect

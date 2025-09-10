@@ -1,8 +1,10 @@
-package usecases
+package usecases_test
 
 import (
+	"context"
 	"testing"
 
+	usecases "github.com/ViniciusCampos12/businessHub/app-golang/internal/application/useCases"
 	"github.com/ViniciusCampos12/businessHub/app-golang/internal/domain/entities"
 	"github.com/ViniciusCampos12/businessHub/app-golang/internal/infra/adapters"
 	inmemoryrepository "github.com/ViniciusCampos12/businessHub/app-golang/internal/infra/database/inMemoryRepository"
@@ -11,7 +13,7 @@ import (
 
 func TestShouldDeleteCompanyIfExists(t *testing.T) {
 	mockRepo := &inmemoryrepository.MockRepository{Companies: make(map[string]*entities.Company)}
-	useCase := &DeleteCompany{Repo: mockRepo, Broker: &adapters.MockPublisher{Fail: false}}
+	useCase := &usecases.DeleteCompany{Repo: mockRepo, Broker: &adapters.MockPublisher{Fail: false}}
 
 	mongoId := primitive.NewObjectID()
 
@@ -32,15 +34,15 @@ func TestShouldDeleteCompanyIfExists(t *testing.T) {
 		},
 	}
 
-	mockRepo.Create(companyDummie)
+	mockRepo.Create(companyDummie, context.TODO())
 
-	err := useCase.Handle(mongoId.Hex())
+	err := useCase.Handle(mongoId, context.TODO())
 
 	if err != nil {
 		t.Fatalf("expected nil error, got %v", err)
 	}
 
-	_, foundErr := mockRepo.FindById(mongoId.Hex())
+	_, foundErr := mockRepo.FindById(mongoId, context.TODO())
 	if foundErr != nil {
 		t.Fatalf("unexpected error: %v", foundErr)
 	}
@@ -52,11 +54,11 @@ func TestShouldDeleteCompanyIfExists(t *testing.T) {
 
 func TestShouldNotDeleteCompanyIfNotExists(t *testing.T) {
 	mockRepo := &inmemoryrepository.MockRepository{Companies: make(map[string]*entities.Company)}
-	useCase := &DeleteCompany{Repo: mockRepo, Broker: &adapters.MockPublisher{Fail: false}}
+	useCase := &usecases.DeleteCompany{Repo: mockRepo, Broker: &adapters.MockPublisher{Fail: false}}
 
 	mongoId := primitive.NewObjectID()
 
-	err := useCase.Handle(mongoId.Hex())
+	err := useCase.Handle(mongoId, context.TODO())
 
 	if err == nil {
 		t.Fatalf("expected error, got nil")

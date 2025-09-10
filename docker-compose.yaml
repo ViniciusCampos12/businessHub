@@ -1,10 +1,8 @@
-version: "3.9"
-
 services:
   go-app:
     build:
       context: ./app-golang
-      target: dev
+      target: ${TARGET}
     container_name: go-app
     tty: true
     restart: unless-stopped
@@ -12,10 +10,12 @@ services:
       - .env
     ports:
       - "${GO_PORT}:8080"
+    volumes:
+      - "./app-golang:/app"
     environment:
-      - RABBITMQ_URL=amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:${RABBITMQ_PORT}/
-      - MONGO_URI=mongodb://${DB_HOST}:${DB_PORT}/${DB_DATABASE}
-      - DB_DATABASE=${DB_DATABASE}
+      - RABBITMQ_URL=${RABBITMQ_URI}
+      - MONGO_URI=${MONGO_URI}
+      - MONGO_DATABASE=${MONGO_DATABASE}
     depends_on:
       - rabbitmq
       - mongo
@@ -32,24 +32,27 @@ services:
       - rabbitmq
       - mongo
 
-
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
+    env_file:
+      - .env
     ports:
       - "5672:5672"
       - "15672:15672"
     environment:
-      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
-      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASW}
 
   mongo:
     image: mongo:7
     container_name: mongo
+    env_file:
+      - .env
     ports:
-      - "${DB_PORT}:27017"
+      - "${MONGO_EXTERNAL_PORT}:27017"
     environment:
-      - MONGO_INITDB_DATABASE=${DB_DATABASE}
+      - MONGO_INITDB_DATABASE=${MONGO_DATABASE}
     volumes:
       - mongo-data:/data/db
 

@@ -1,8 +1,10 @@
-package usecases
+package usecases_test
 
 import (
+	"context"
 	"testing"
 
+	usecases "github.com/ViniciusCampos12/businessHub/app-golang/internal/application/useCases"
 	"github.com/ViniciusCampos12/businessHub/app-golang/internal/domain/entities"
 	"github.com/ViniciusCampos12/businessHub/app-golang/internal/infra/adapters"
 	inmemoryrepository "github.com/ViniciusCampos12/businessHub/app-golang/internal/infra/database/inMemoryRepository"
@@ -10,7 +12,7 @@ import (
 
 func TestShouldCreateCompanyIfNotExists(t *testing.T) {
 	mockRepo := &inmemoryrepository.MockRepository{Companies: make(map[string]*entities.Company)}
-	useCase := &CreateCompany{Repo: mockRepo, Broker: &adapters.MockPublisher{Fail: false}}
+	useCase := &usecases.CreateCompany{Repo: mockRepo, Broker: &adapters.MockPublisher{Fail: false}}
 
 	companyDummie := &entities.Company{
 		Document:          "99862056000112",
@@ -28,7 +30,7 @@ func TestShouldCreateCompanyIfNotExists(t *testing.T) {
 		},
 	}
 
-	result, err := useCase.Handle(companyDummie)
+	result, err := useCase.Handle(companyDummie, context.TODO())
 
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
@@ -46,7 +48,7 @@ func TestShouldCreateCompanyIfNotExists(t *testing.T) {
 
 func TestShouldNotCreateCompanyIfAlreadyExists(t *testing.T) {
 	mockRepo := &inmemoryrepository.MockRepository{Companies: make(map[string]*entities.Company)}
-	useCase := &CreateCompany{Repo: mockRepo, Broker: &adapters.MockPublisher{Fail: false}}
+	useCase := &usecases.CreateCompany{Repo: mockRepo, Broker: &adapters.MockPublisher{Fail: false}}
 
 	companyDummie := &entities.Company{
 		Document:          "99862056000112",
@@ -64,9 +66,9 @@ func TestShouldNotCreateCompanyIfAlreadyExists(t *testing.T) {
 		},
 	}
 
-	mockRepo.Create(companyDummie)
+	mockRepo.Create(companyDummie, context.TODO())
 
-	existingCompany, err := useCase.Handle(companyDummie)
+	existingCompany, err := useCase.Handle(companyDummie, context.TODO())
 
 	if existingCompany != nil {
 		t.Fatalf("expected nil, got %v", existingCompany)
@@ -79,7 +81,7 @@ func TestShouldNotCreateCompanyIfAlreadyExists(t *testing.T) {
 
 func TestShouldNotCreateCompanyIfPWDQuotaIsInvalid(t *testing.T) {
 	mockRepo := &inmemoryrepository.MockRepository{Companies: make(map[string]*entities.Company)}
-	useCase := &CreateCompany{Repo: mockRepo, Broker: &adapters.MockPublisher{Fail: false}}
+	useCase := &usecases.CreateCompany{Repo: mockRepo, Broker: &adapters.MockPublisher{Fail: false}}
 
 	companyDummie := &entities.Company{
 		Document:          "99862056000112",
@@ -97,7 +99,7 @@ func TestShouldNotCreateCompanyIfPWDQuotaIsInvalid(t *testing.T) {
 		},
 	}
 
-	existingCompany, err := useCase.Handle(companyDummie)
+	existingCompany, err := useCase.Handle(companyDummie, context.TODO())
 
 	if existingCompany != nil {
 		t.Fatalf("expected nil, got %v", existingCompany)

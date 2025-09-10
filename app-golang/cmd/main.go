@@ -2,9 +2,10 @@ package main
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/ViniciusCampos12/businessHub/app-golang/internal/infra/adapters"
@@ -14,33 +15,89 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	_ "github.com/ViniciusCampos12/businessHub/app-golang/docs"
+	log "github.com/sirupsen/logrus"
 )
 
 var mongoDB *mongo.Database
-var ctx context.Context
 var rbmqPub *adapters.RabbitMqAdapter
 
 func init() {
-	mongoDB, ctx = mongoStart()
+	mongoDB = mongoStart()
 	rbmqPub = rabbitmqStart()
 }
 
 func main() {
-	defer rbmqPub.Close()
-	defer mongoDB.Client().Disconnect(ctx)
-	r := gin.Default()
+	log.SetFormatter(&log.JSONFormatter{})
 
-	r.Use(errorMiddleware())
+	r := gin.New()
+	r.Use(LogrusMiddleware(), gin.Recovery())
+
+	server := &http.Server{
+		Addr:    ":8080",
+		Handler: r,
+	}
+
+	r.Use(ErrorMiddleware())
 	routes.SetupBaseRouter(r, mongoDB, rbmqPub)
 
-	r.Run("0.0.0.0:8080")
+	go shutdown(server)
+
+	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		log.Fatalf("ListenAndServe: %v", err)
+	}
 }
 
-func mongoStart() (*mongo.Database, context.Context) {
-	mongoURI, MongoDbDatabase := os.Getenv("MONGO_URI"), os.Getenv("DB_DATABASE")
+func LogrusMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		start := time.Now()
+
+		c.Next()
+
+		latency := time.Since(start)
+
+		log.WithFields(log.Fields{
+			"status":   c.Writer.Status(),
+			"method":   c.Request.Method,
+			"path":     c.Request.URL.Path,
+			"latency":  latency.String(),
+			"clientIP": c.ClientIP(),
+		}).Info("HTTP request")
+	}
+}
+
+func ErrorMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Next()
+		if len(c.Errors) > 0 && !c.Writer.Written() {
+			for _, e := range c.Errors {
+				log.Errorf("[GIN-ERROR] %v\n", e.Err)
+			}
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+		}
+	}
+}
+
+func shutdown(server *http.Server) {
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	log.Info("Shutting down server")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	if err := server.Shutdown(ctx); err != nil {
+		log.Infof("Server forced to shutdown: %v", err)
+	}
+
+	cleanup(ctx, mongoDB, rbmqPub)
+}
+
+func mongoStart() *mongo.Database {
+	mongoURI, MongoDbDatabase := os.Getenv("MONGO_URI"), os.Getenv("MONGO_DATABASE")
 
 	if MongoDbDatabase == "" || mongoURI == "" {
-		panic("Environment variables MONGO_URI are not defined")
+		log.Fatal("Environment variables MONGO_URI are not defined")
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -50,36 +107,38 @@ func mongoStart() (*mongo.Database, context.Context) {
 
 	client, err := mongo.Connect(ctx, clientOpts)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	if err := client.Ping(ctx, nil); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
-	log.Println("MongoDB connected successfully")
+	log.Info("MongoDB connected successfully")
 
-	return client.Database(MongoDbDatabase), context.Background()
+	return client.Database(MongoDbDatabase)
 }
 
 func rabbitmqStart() *adapters.RabbitMqAdapter {
 	rabbitmqUrl := os.Getenv("RABBITMQ_URL")
 
 	if rabbitmqUrl == "" {
-		panic("Environment variables RABBITMQ_URL are not defined")
+		log.Fatal("Environment variables RABBITMQ_URL are not defined")
 	}
 
 	return adapters.NewRabbitMqAdapter(rabbitmqUrl)
 }
 
-func errorMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Next()
-		if len(c.Errors) > 0 && !c.Writer.Written() {
-			for _, e := range c.Errors {
-				log.Printf("[GIN-ERROR] %v\n", e.Err)
-			}
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
-		}
+func cleanup(ctx context.Context, mongoDB *mongo.Database, rbmqPub *adapters.RabbitMqAdapter) {
+	if err := mongoDB.Client().Disconnect(ctx); err != nil {
+		log.Errorf("Error disconnecting Mongo: %v", err)
 	}
+
+	log.Info("Mongo successfully disconnected")
+
+	if err := rbmqPub.Close(); err != nil {
+		log.Errorf("Error disconnecting RabbitMQ: %v", err)
+	}
+
+	log.Info("RabbitMQ successfully disconnected")
 }

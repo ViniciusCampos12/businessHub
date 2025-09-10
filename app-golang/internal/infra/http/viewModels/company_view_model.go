@@ -9,7 +9,7 @@ type CompanyOutput struct {
 	SocialReason      string        `json:"social_reason" example:"My Company LTDA"`
 	Address           AddressOutput `json:"address"`
 	TotalEmployees    int           `json:"total_employees" example:"100"`
-	TotalEmployeesPwd int           `json:"total_employees_pwd" example:"1"`
+	TotalEmployeesPwd int           `json:"total_employees_pwd" example:"2"`
 	CreatedAt         time.Time     `json:"created_at" example:"2025-09-04T23:51:26.881469869Z"`
 	UpdatedAt         time.Time     `json:"updated_at" example:"2025-09-04T23:51:26.881469869Z"`
 }
@@ -17,7 +17,7 @@ type CompanyOutput struct {
 type AddressOutput struct {
 	Street       string `json:"street" example:"Rua teste"`
 	Complement   string `json:"complement,omitempty" example:"Perto do Mercado X"`
-	PostalCode   string `json:"postal_code" example:"123-45678"`
+	PostalCode   string `json:"postal_code" example:"12345678"`
 	State        string `json:"state" example:"SP"`
 	City         string `json:"city" example:"Maua"`
 	Neighborhood string `json:"neighborhood" example:"Jardins"`
