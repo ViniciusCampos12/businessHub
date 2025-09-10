@@ -51,7 +51,7 @@ func (r *RabbitMqAdapter) Publish(queue string, body []byte) error {
 		false,
 		false,
 		amqp.Publishing{
-			ContentType: "text/plain",
+			ContentType: "application/json",
 			Body:        body,
 		},
 	)
