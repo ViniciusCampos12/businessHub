@@ -1,22 +1,38 @@
-FROM golang:1.25-alpine AS builder
+FROM golang:1.25-alpine AS dev
 
 WORKDIR /app
 
-RUN apk add --no-cache git ca-certificates
+RUN apk add --no-cache git bash curl
 
-COPY go.mod go.sum ./
+RUN go install github.com/air-verse/air@latest
+RUN go install github.com/swaggo/swag/cmd/swag@latest
+RUN go install gotest.tools/gotestsum@latest
+
+COPY go.* ./
 RUN go mod download
 
 COPY . .
 
+RUN adduser -D -u 1000 appuser
+
+ENV GOPATH=/app/.cache/go
+ENV GOMODCACHE=$GOPATH/pkg/mod
+ENV GOCACHE=$GOPATH/cache
+RUN mkdir -p /app/.cache/go && chown -R appuser:appuser /app/.cache
+
+USER appuser
+
+FROM golang:1.25-alpine AS build
+
+COPY --from=dev /app/. .
+
 RUN CGO_ENABLED=0 GOOS=linux go build -o /app/go-app ./cmd/main.go
-RUN ls -lh /app
 
 FROM alpine:latest AS prod
 
 WORKDIR /app
 
-COPY --from=builder /app/go-app .
+COPY --from=build /app/go-app .
 
 RUN chmod +x /app/go-app
 

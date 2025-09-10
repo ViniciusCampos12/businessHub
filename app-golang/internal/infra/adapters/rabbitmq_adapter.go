@@ -1,7 +1,9 @@
 package adapters
 
 import (
-	"log"
+	"fmt"
+
+	log "github.com/sirupsen/logrus"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -13,6 +15,7 @@ type RabbitMqAdapter struct {
 
 func NewRabbitMqAdapter(url string) *RabbitMqAdapter {
 	conn, err := amqp.Dial(url)
+
 	if err != nil {
 		log.Fatalf("Failed to connect to RabbitMQ: %v", err)
 	}
@@ -37,8 +40,9 @@ func (r *RabbitMqAdapter) Publish(queue string, body []byte) error {
 		false, // no-wait
 		nil,   // arguments
 	)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to rabbitmq queue declare: %w", err)
 	}
 
 	return r.channel.Publish(
@@ -47,13 +51,18 @@ func (r *RabbitMqAdapter) Publish(queue string, body []byte) error {
 		false,
 		false,
 		amqp.Publishing{
-			ContentType: "text/plain",
+			ContentType: "application/json",
 			Body:        body,
 		},
 	)
 }
 
-func (r *RabbitMqAdapter) Close() {
-	r.channel.Close()
-	r.conn.Close()
+func (r *RabbitMqAdapter) Close() error {
+	if err := r.channel.Close(); err != nil {
+		return fmt.Errorf("error closing channel: %w", err)
+	}
+	if err := r.conn.Close(); err != nil {
+		return fmt.Errorf("error closing connection: %w", err)
+	}
+	return nil
 }

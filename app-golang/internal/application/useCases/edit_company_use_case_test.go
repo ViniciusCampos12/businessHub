@@ -1,8 +1,10 @@
-package usecases
+package usecases_test
 
 import (
+	"context"
 	"testing"
 
+	usecases "github.com/ViniciusCampos12/businessHub/app-golang/internal/application/useCases"
 	"github.com/ViniciusCampos12/businessHub/app-golang/internal/domain/entities"
 	"github.com/ViniciusCampos12/businessHub/app-golang/internal/infra/adapters"
 	inmemoryrepository "github.com/ViniciusCampos12/businessHub/app-golang/internal/infra/database/inMemoryRepository"
@@ -11,11 +13,11 @@ import (
 
 func TestShouldEditCompanyIfExists(t *testing.T) {
 	mockRepo := &inmemoryrepository.MockRepository{Companies: make(map[string]*entities.Company)}
-	useCase := &EditCompany{Repo: mockRepo, Broker: &adapters.MockPublisher{Fail: false}}
+	useCase := &usecases.EditCompany{Repo: mockRepo, Broker: &adapters.MockPublisher{Fail: false}}
 
 	mongoId := primitive.NewObjectID()
 
-	original := &entities.Company{
+	companyDummie := &entities.Company{
 		ID:                mongoId,
 		Document:          "99862056000112",
 		FantasyName:       "Old Company",
@@ -32,9 +34,9 @@ func TestShouldEditCompanyIfExists(t *testing.T) {
 		},
 	}
 
-	mockRepo.Create(original)
+	mockRepo.Create(companyDummie, context.TODO())
 
-	update := &entities.Company{
+	companyDummieUpdate := &entities.Company{
 		FantasyName:       "My Company",
 		SocialReason:      "My Company LTDA",
 		TotalEmployees:    150,
@@ -49,7 +51,7 @@ func TestShouldEditCompanyIfExists(t *testing.T) {
 		},
 	}
 
-	hasUpdated, err := useCase.Handle(mongoId.Hex(), update)
+	hasUpdated, err := useCase.Handle(mongoId, companyDummieUpdate, context.TODO())
 
 	if err != nil {
 		t.Fatalf("expected nil error, got %v", err)
@@ -59,7 +61,7 @@ func TestShouldEditCompanyIfExists(t *testing.T) {
 		t.Fatalf("expected true, got false")
 	}
 
-	edited, _ := mockRepo.FindByDocument("99862056000112")
+	edited, _ := mockRepo.FindByDocument("99862056000112", context.TODO())
 	if edited.FantasyName != "My Company" || edited.TotalEmployees != 150 {
 		t.Fatalf("company not updated correctly")
 	}
@@ -67,11 +69,11 @@ func TestShouldEditCompanyIfExists(t *testing.T) {
 
 func TestShouldNotEditCompanyIfNotExists(t *testing.T) {
 	mockRepo := &inmemoryrepository.MockRepository{Companies: make(map[string]*entities.Company)}
-	useCase := &EditCompany{Repo: mockRepo, Broker: &adapters.MockPublisher{Fail: false}}
+	useCase := &usecases.EditCompany{Repo: mockRepo, Broker: &adapters.MockPublisher{Fail: false}}
 
 	mongoId := primitive.NewObjectID()
 
-	update := &entities.Company{
+	companyDummieUpdate := &entities.Company{
 		FantasyName:       "My Company",
 		SocialReason:      "My Company LTDA",
 		TotalEmployees:    15,
@@ -86,7 +88,7 @@ func TestShouldNotEditCompanyIfNotExists(t *testing.T) {
 		},
 	}
 
-	hasUpdated, err := useCase.Handle(mongoId.Hex(), update)
+	hasUpdated, err := useCase.Handle(mongoId, companyDummieUpdate, context.TODO())
 
 	if err == nil {
 		t.Fatalf("expected error, got nil")
@@ -106,11 +108,11 @@ func TestShouldNotEditCompanyIfNotExists(t *testing.T) {
 
 func TestShouldNotEditCompanyIfPWDQuotaInvalid(t *testing.T) {
 	mockRepo := &inmemoryrepository.MockRepository{Companies: make(map[string]*entities.Company)}
-	useCase := &EditCompany{Repo: mockRepo, Broker: &adapters.MockPublisher{Fail: false}}
+	useCase := &usecases.EditCompany{Repo: mockRepo, Broker: &adapters.MockPublisher{Fail: false}}
 
 	mongoId := primitive.NewObjectID()
 
-	original := &entities.Company{
+	companyDummie := &entities.Company{
 		ID:                mongoId,
 		Document:          "99862056000112",
 		FantasyName:       "Old Company",
@@ -127,7 +129,7 @@ func TestShouldNotEditCompanyIfPWDQuotaInvalid(t *testing.T) {
 		},
 	}
 
-	mockRepo.Create(original)
+	mockRepo.Create(companyDummie, context.TODO())
 
 	update := &entities.Company{
 		FantasyName:       "My Company",
@@ -144,7 +146,7 @@ func TestShouldNotEditCompanyIfPWDQuotaInvalid(t *testing.T) {
 		},
 	}
 
-	hasUpdated, err := useCase.Handle(mongoId.Hex(), update)
+	hasUpdated, err := useCase.Handle(mongoId, update, context.TODO())
 
 	if err == nil {
 		t.Fatalf("expected error due to PWD quota, got nil")

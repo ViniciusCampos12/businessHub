@@ -1,14 +1,14 @@
 package usecases
 
 import (
-	"encoding/json"
-	"errors"
-	"time"
+	"context"
+	"fmt"
 
 	"github.com/ViniciusCampos12/businessHub/app-golang/internal/domain/entities"
 	"github.com/ViniciusCampos12/businessHub/app-golang/internal/domain/interfaces"
+	valueobjects "github.com/ViniciusCampos12/businessHub/app-golang/internal/domain/valueObjects"
+	"github.com/ViniciusCampos12/businessHub/app-golang/internal/fails"
 	"github.com/google/uuid"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type CreateCompany struct {
@@ -16,50 +16,42 @@ type CreateCompany struct {
 	Broker interfaces.IMessageBroker
 }
 
-func (cc *CreateCompany) Handle(c *entities.Company) (*entities.Company, error) {
-	c.UnsmaskDocument()
-	existsCompany, err := cc.Repo.FindByDocument(c.Document)
+func (cc *CreateCompany) Handle(c *entities.Company, ctx context.Context) (*entities.Company, error) {
+	existsCompany, err := cc.Repo.FindByDocument(c.Document, ctx)
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("fail to find by document: %w", err)
 	}
 
 	if existsCompany != nil {
-		return nil, errors.New("company already exists")
+		return nil, fails.ErrCompanyAlreadyExists
 	}
 
 	err = c.CheckPWDQuota(c.TotalEmployees, c.TotalEmployeesPwd)
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("fail to consult pwd quota: %w", err)
 	}
 
-	c.Address.UnsmaskPostalCode()
-
-	c.ID = primitive.NewObjectID()
-	c.UpdatedAt = time.Now()
-	c.CreatedAt = time.Now()
-
-	newCompany, err := cc.Repo.Create(c)
+	c.PrepareForCreate()
+	newCompany, err := cc.Repo.Create(c, ctx)
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("fail to create new company: %w", err)
 	}
 
-	message := map[string]interface{}{
-		"Message": "company_created",
-		"EventId": uuid.New().String(),
-		"Data": c,
+	e := valueobjects.Event{
+		Message: "company_created",
+		EventId: uuid.New().String(),
+		Data:    c,
 	}
-
-	payload, err := json.Marshal(message)
+	encodedEvent, err := e.ToJson()
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("fail convert event to json : %w", err)
 	}
 
-	cc.Broker.Publish("businesshub-logger", payload)
+	cc.Broker.Publish("businesshub-logger", encodedEvent)
 
 	return newCompany, nil
-
 }

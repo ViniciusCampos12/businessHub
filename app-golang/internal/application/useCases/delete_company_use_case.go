@@ -1,11 +1,14 @@
 package usecases
 
 import (
-	"encoding/json"
-	"errors"
+	"context"
+	"fmt"
 
 	"github.com/ViniciusCampos12/businessHub/app-golang/internal/domain/interfaces"
+	valueobjects "github.com/ViniciusCampos12/businessHub/app-golang/internal/domain/valueObjects"
+	"github.com/ViniciusCampos12/businessHub/app-golang/internal/fails"
 	"github.com/google/uuid"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type DeleteCompany struct {
@@ -13,36 +16,36 @@ type DeleteCompany struct {
 	Broker interfaces.IMessageBroker
 }
 
-func (dc *DeleteCompany) Handle(id string) error {
-	existsCompany, err := dc.Repo.FindById(id)
+func (dc *DeleteCompany) Handle(objId primitive.ObjectID, ctx context.Context) error {
+	existsCompany, err := dc.Repo.FindById(objId, ctx)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("fail to find by id: %w", err)
 	}
 
 	if existsCompany == nil {
-		return errors.New("company not found")
+		return fails.ErrCompanyNotFound
 	}
 
-	err = dc.Repo.Delete(id)
+	err = dc.Repo.Delete(objId, ctx)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("fail to delete: %w", err)
 	}
 
-	message := map[string]interface{}{
-		"Message": "company_deleted",
-		"EventId": uuid.New().String(),
-		"Data": existsCompany,
+	e := valueobjects.Event{
+		Message: "company_deleted",
+		EventId: uuid.New().String(),
+		Data:    existsCompany,
 	}
 
-	payload, err := json.Marshal(message)
+	encodedEvent, err := e.ToJson()
 
 	if err != nil {
-		return err
+		return fmt.Errorf("fail to convert event to json: %w", err)
 	}
 
-	dc.Broker.Publish("businesshub-logger", payload)
+	dc.Broker.Publish("businesshub-logger", encodedEvent)
 
 	return err
 }

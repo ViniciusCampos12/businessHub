@@ -3,23 +3,33 @@ package entities
 import (
 	"fmt"
 	"math"
-	"strings"
 	"time"
 
+	"github.com/ViniciusCampos12/businessHub/app-golang/internal/fails"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // swagger:model Company
 type Company struct {
-	ID                primitive.ObjectID `json:"id" bson:"_id,omitempty"  swaggerignore:"true"`
-	Document          string             `json:"document" bson:"document" validate:"required" example:"19.862.056/0002-23"`
-	FantasyName       string             `json:"fantasy_name" bson:"fantasy_name" validate:"required" example:"My Company"`
-	SocialReason      string             `json:"social_reason" bson:"social_reason" validate:"required" example:"My Company LTDA"`
-	Address           Address            `json:"address" bson:"address" validate:"required,dive"`
-	TotalEmployees    int                `json:"total_employees" bson:"total_employees" validate:"gte=0" example:"100"`
-	TotalEmployeesPwd int                `json:"total_employees_pwd" bson:"total_employees_pwd" validate:"gte=0" example:"1"`
+	ID                primitive.ObjectID `json:"id" bson:"_id,omitempty" swaggerignore:"true"`
+	Document          string             `json:"document" bson:"document" binding:"required,len=14,numeric" example:"19862056000223"`
+	FantasyName       string             `json:"fantasy_name" bson:"fantasy_name" binding:"required,min=2,max=80" example:"My Company"`
+	SocialReason      string             `json:"social_reason" bson:"social_reason" binding:"required,min=2,max=80" example:"My Company LTDA"`
+	Address           Address            `json:"address" bson:"address" binding:"required"`
+	TotalEmployees    int                `json:"total_employees" bson:"total_employees" binding:"required,gte=0" example:"100"`
+	TotalEmployeesPwd int                `json:"total_employees_pwd" bson:"total_employees_pwd" binding:"required,gte=0" example:"1"`
 	UpdatedAt         time.Time          `json:"updated_at" bson:"updated_at" swaggerignore:"true"`
 	CreatedAt         time.Time          `json:"created_at" bson:"created_at" swaggerignore:"true"`
+}
+
+func (c *Company) PrepareForCreate() {
+	c.ID = primitive.NewObjectID()
+	c.UpdatedAt = time.Now()
+	c.CreatedAt = time.Now()
+}
+
+func (c *Company) PrepareForUpdate() {
+	c.UpdatedAt = time.Now()
 }
 
 func (c *Company) pwdPercentage(totalEmployees int) float64 {
@@ -46,17 +56,8 @@ func (c *Company) CheckPWDQuota(totalEmployees int, currentPWDs int) error {
 	minPWDs := int(math.Ceil(float64(totalEmployees) * percentage))
 
 	if currentPWDs < minPWDs {
-		return fmt.Errorf("Insufficient quota: company must have %d PWD(s), but has %d (required by Brazilian Law nº 8.213/91, art. 93)", minPWDs, currentPWDs)
+		return fmt.Errorf("%w: company must have %d PWD(s), but has %d (required by Brazilian Law nº 8.213/91, art. 93)", fails.ErrInsufficientPWDQuota, minPWDs, currentPWDs)
 	}
 
 	return nil
-}
-
-func (c *Company) UnsmaskDocument() {
-	document := c.Document
-	document = strings.ReplaceAll(document, ".", "")
-	document = strings.ReplaceAll(document, "/", "")
-	document = strings.ReplaceAll(document, "-", "")
-
-	c.Document = document
 }

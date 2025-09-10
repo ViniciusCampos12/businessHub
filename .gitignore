@@ -1,1 +1,5 @@
 .env
+tmp
+.air.toml
+.cache*
+node_modules

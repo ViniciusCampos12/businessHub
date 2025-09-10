@@ -1,12 +1,17 @@
 package interfaces
 
-import "github.com/ViniciusCampos12/businessHub/app-golang/internal/domain/entities"
+import (
+	"context"
+
+	"github.com/ViniciusCampos12/businessHub/app-golang/internal/domain/entities"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 type ICompanyRepository interface {
-	Create(c *entities.Company) (*entities.Company, error)
-	FindByDocument(document string) (*entities.Company, error)
-	FindMany() ([]*entities.Company, error)
-	FindById(id string) (*entities.Company, error)
-	Save(id string, c *entities.Company) (bool, error)
-	Delete(id string) error
+	Create(c *entities.Company, ctx context.Context) (*entities.Company, error)
+	FindByDocument(document string, ctx context.Context) (*entities.Company, error)
+	FindMany(ctx context.Context) ([]*entities.Company, error)
+	FindById(id primitive.ObjectID, ctx context.Context) (*entities.Company, error)
+	Save(id primitive.ObjectID, c *entities.Company, ctx context.Context) error
+	Delete(id primitive.ObjectID, ctx context.Context) error
 }

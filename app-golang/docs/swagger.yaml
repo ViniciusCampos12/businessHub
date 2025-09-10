@@ -1,8 +1,9 @@
 definitions:
-  github_com_ViniciusCampos12_businessHub_app-golang_internal_domain_entities.Address:
+  entities.Address:
     properties:
       city:
         example: Maua
+        minLength: 2
         type: string
       complement:
         example: Perto do Mercado X
@@ -28,12 +29,14 @@ definitions:
     - state
     - street
     type: object
-  github_com_ViniciusCampos12_businessHub_app-golang_internal_domain_entities.Company:
+  entities.Company:
     properties:
       address:
-        $ref: '#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_domain_entities.Address'
+        $ref: '#/definitions/entities.Address'
       document:
         example: 19.862.056/0002-23
+        maxLength: 18
+        minLength: 14
         type: string
       fantasy_name:
         example: My Company
@@ -55,16 +58,108 @@ definitions:
     - fantasy_name
     - social_reason
     type: object
-  github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.ErrorResponse:
+  helpers.ErrorResponse:
+    properties:
+      error: {}
+      success:
+        example: false
+        type: boolean
+    type: object
+  viewmodels.AddressOutput:
+    properties:
+      city:
+        example: Maua
+        type: string
+      complement:
+        example: Perto do Mercado X
+        type: string
+      neighborhood:
+        example: Jardins
+        type: string
+      postal_code:
+        example: 123-45678
+        type: string
+      state:
+        example: SP
+        type: string
+      street:
+        example: Rua teste
+        type: string
+    type: object
+  viewmodels.CompaniesListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/viewmodels.CompanyOutput'
+        type: array
+      success:
+        type: boolean
+    type: object
+  viewmodels.CompanyBadRequestResponse:
     properties:
       error:
+        example: 'Insufficient quota: company must have 10 PWD(s), but has 5 (required
+          by Brazilian Law nº 8.213/91, art. 93)'
         type: string
       success:
         type: boolean
     type: object
-  github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.SuccessResponse:
+  viewmodels.CompanyConflitResponse:
     properties:
-      data: {}
+      error:
+        example: company already exists
+        type: string
+      success:
+        type: boolean
+    type: object
+  viewmodels.CompanyCreatedResponse:
+    properties:
+      data:
+        $ref: '#/definitions/viewmodels.CompanyOutput'
+      success:
+        type: boolean
+    type: object
+  viewmodels.CompanyNotFoundResponse:
+    properties:
+      error:
+        example: company not found
+        type: string
+      success:
+        type: boolean
+    type: object
+  viewmodels.CompanyOutput:
+    properties:
+      address:
+        $ref: '#/definitions/viewmodels.AddressOutput'
+      created_at:
+        example: "2025-09-04T23:51:26.881469869Z"
+        type: string
+      document:
+        example: "19862056000223"
+        type: string
+      fantasy_name:
+        example: My Company
+        type: string
+      id:
+        example: 68ba25fe8cd931d0437112ad
+        type: string
+      social_reason:
+        example: My Company LTDA
+        type: string
+      total_employees:
+        example: 100
+        type: integer
+      total_employees_pwd:
+        example: 1
+        type: integer
+      updated_at:
+        example: "2025-09-04T23:51:26.881469869Z"
+        type: string
+    type: object
+  viewmodels.CompanyUpdatedResponse:
+    properties:
+      data:
+        $ref: '#/definitions/viewmodels.CompanyOutput'
       success:
         type: boolean
     type: object
@@ -78,13 +173,13 @@ paths:
       - application/json
       responses:
         "200":
-          description: Ok
+          description: OK
           schema:
-            $ref: '#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.SuccessResponse'
+            $ref: '#/definitions/viewmodels.CompaniesListResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.ErrorResponse'
+            $ref: '#/definitions/helpers.ErrorResponse'
       summary: list all companies
       tags:
       - Companies
@@ -98,22 +193,26 @@ paths:
         name: company
         required: true
         schema:
-          $ref: '#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_domain_entities.Company'
+          $ref: '#/definitions/entities.Company'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.SuccessResponse'
+            $ref: '#/definitions/viewmodels.CompanyCreatedResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.ErrorResponse'
+            $ref: '#/definitions/viewmodels.CompanyBadRequestResponse'
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.ErrorResponse'
+            $ref: '#/definitions/viewmodels.CompanyConflitResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helpers.ErrorResponse'
       summary: create a new company
       tags:
       - Companies
@@ -132,11 +231,11 @@ paths:
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.ErrorResponse'
+            $ref: '#/definitions/viewmodels.CompanyNotFoundResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.ErrorResponse'
+            $ref: '#/definitions/helpers.ErrorResponse'
       summary: delete a existing company
       tags:
       - Companies
@@ -150,7 +249,7 @@ paths:
         name: company
         required: true
         schema:
-          $ref: '#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_domain_entities.Company'
+          $ref: '#/definitions/entities.Company'
       - description: Company ID
         in: path
         name: id
@@ -160,21 +259,21 @@ paths:
       - application/json
       responses:
         "200":
-          description: Ok
+          description: OK
           schema:
-            $ref: '#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.SuccessResponse'
+            $ref: '#/definitions/viewmodels.CompanyUpdatedResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.ErrorResponse'
+            $ref: '#/definitions/viewmodels.CompanyBadRequestResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.ErrorResponse'
-        "409":
-          description: Conflict
+            $ref: '#/definitions/viewmodels.CompanyNotFoundResponse'
+        "500":
+          description: Internal Server Error
           schema:
-            $ref: '#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.ErrorResponse'
+            $ref: '#/definitions/helpers.ErrorResponse'
       summary: edit a existing company
       tags:
       - Companies

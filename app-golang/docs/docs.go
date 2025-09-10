@@ -27,15 +27,15 @@ const docTemplate = `{
                 "summary": "list all companies",
                 "responses": {
                     "200": {
-                        "description": "Ok",
+                        "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.SuccessResponse"
+                            "$ref": "#/definitions/viewmodels.CompaniesListResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.ErrorResponse"
+                            "$ref": "#/definitions/helpers.ErrorResponse"
                         }
                     }
                 }
@@ -59,7 +59,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_domain_entities.Company"
+                            "$ref": "#/definitions/entities.Company"
                         }
                     }
                 ],
@@ -67,19 +67,25 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.SuccessResponse"
+                            "$ref": "#/definitions/viewmodels.CompanyCreatedResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.ErrorResponse"
+                            "$ref": "#/definitions/viewmodels.CompanyBadRequestResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.ErrorResponse"
+                            "$ref": "#/definitions/viewmodels.CompanyConflitResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/helpers.ErrorResponse"
                         }
                     }
                 }
@@ -105,7 +111,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_domain_entities.Company"
+                            "$ref": "#/definitions/entities.Company"
                         }
                     },
                     {
@@ -118,27 +124,27 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Ok",
+                        "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.SuccessResponse"
+                            "$ref": "#/definitions/viewmodels.CompanyUpdatedResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.ErrorResponse"
+                            "$ref": "#/definitions/viewmodels.CompanyBadRequestResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.ErrorResponse"
+                            "$ref": "#/definitions/viewmodels.CompanyNotFoundResponse"
                         }
                     },
-                    "409": {
-                        "description": "Conflict",
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.ErrorResponse"
+                            "$ref": "#/definitions/helpers.ErrorResponse"
                         }
                     }
                 }
@@ -165,13 +171,13 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.ErrorResponse"
+                            "$ref": "#/definitions/viewmodels.CompanyNotFoundResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.ErrorResponse"
+                            "$ref": "#/definitions/helpers.ErrorResponse"
                         }
                     }
                 }
@@ -179,7 +185,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "github_com_ViniciusCampos12_businessHub_app-golang_internal_domain_entities.Address": {
+        "entities.Address": {
             "type": "object",
             "required": [
                 "city",
@@ -191,6 +197,7 @@ const docTemplate = `{
             "properties": {
                 "city": {
                     "type": "string",
+                    "minLength": 2,
                     "example": "Maua"
                 },
                 "complement": {
@@ -217,7 +224,7 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_ViniciusCampos12_businessHub_app-golang_internal_domain_entities.Company": {
+        "entities.Company": {
             "type": "object",
             "required": [
                 "address",
@@ -227,10 +234,12 @@ const docTemplate = `{
             ],
             "properties": {
                 "address": {
-                    "$ref": "#/definitions/github_com_ViniciusCampos12_businessHub_app-golang_internal_domain_entities.Address"
+                    "$ref": "#/definitions/entities.Address"
                 },
                 "document": {
                     "type": "string",
+                    "maxLength": 18,
+                    "minLength": 14,
                     "example": "19.862.056/0002-23"
                 },
                 "fantasy_name": {
@@ -253,21 +262,152 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.ErrorResponse": {
+        "helpers.ErrorResponse": {
             "type": "object",
             "properties": {
-                "error": {
-                    "type": "string"
+                "error": {},
+                "success": {
+                    "type": "boolean",
+                    "example": false
+                }
+            }
+        },
+        "viewmodels.AddressOutput": {
+            "type": "object",
+            "properties": {
+                "city": {
+                    "type": "string",
+                    "example": "Maua"
+                },
+                "complement": {
+                    "type": "string",
+                    "example": "Perto do Mercado X"
+                },
+                "neighborhood": {
+                    "type": "string",
+                    "example": "Jardins"
+                },
+                "postal_code": {
+                    "type": "string",
+                    "example": "123-45678"
+                },
+                "state": {
+                    "type": "string",
+                    "example": "SP"
+                },
+                "street": {
+                    "type": "string",
+                    "example": "Rua teste"
+                }
+            }
+        },
+        "viewmodels.CompaniesListResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/viewmodels.CompanyOutput"
+                    }
                 },
                 "success": {
                     "type": "boolean"
                 }
             }
         },
-        "github_com_ViniciusCampos12_businessHub_app-golang_internal_helpers.SuccessResponse": {
+        "viewmodels.CompanyBadRequestResponse": {
             "type": "object",
             "properties": {
-                "data": {},
+                "error": {
+                    "type": "string",
+                    "example": "Insufficient quota: company must have 10 PWD(s), but has 5 (required by Brazilian Law nº 8.213/91, art. 93)"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "viewmodels.CompanyConflitResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "company already exists"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "viewmodels.CompanyCreatedResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/viewmodels.CompanyOutput"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "viewmodels.CompanyNotFoundResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "company not found"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "viewmodels.CompanyOutput": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "$ref": "#/definitions/viewmodels.AddressOutput"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2025-09-04T23:51:26.881469869Z"
+                },
+                "document": {
+                    "type": "string",
+                    "example": "19862056000223"
+                },
+                "fantasy_name": {
+                    "type": "string",
+                    "example": "My Company"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "68ba25fe8cd931d0437112ad"
+                },
+                "social_reason": {
+                    "type": "string",
+                    "example": "My Company LTDA"
+                },
+                "total_employees": {
+                    "type": "integer",
+                    "example": 100
+                },
+                "total_employees_pwd": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2025-09-04T23:51:26.881469869Z"
+                }
+            }
+        },
+        "viewmodels.CompanyUpdatedResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/viewmodels.CompanyOutput"
+                },
                 "success": {
                     "type": "boolean"
                 }
