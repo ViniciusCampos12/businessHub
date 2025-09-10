@@ -9,16 +9,38 @@ services:
     env_file:
       - .env
     ports:
-      - "${GO_PORT}:8080"
-    volumes:
-      - "./app-golang:/app"
+      - "${APP_GOLANG_PORT}:8080"
     environment:
       - RABBITMQ_URL=${RABBITMQ_URI}
       - MONGO_URI=${MONGO_URI}
       - MONGO_DATABASE=${MONGO_DATABASE}
+      - RABBITMQ_COMPANY_QUEUE=${RABBITMQ_COMPANY_QUEUE}
     depends_on:
       - rabbitmq
       - mongo
+      - server
+
+  service-golang:
+    build:
+      context: ./service-golang
+      target: ${TARGET}
+    container_name: service-golang
+    tty: true
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "${SERVICE_GOLANG_PORT}:8080"
+    environment:
+      - RABBITMQ_URL=${RABBITMQ_URI}
+      - MONGO_URI=${MONGO_URI}
+      - MONGO_DATABASE=${MONGO_DATABASE}
+      - RABBITMQ_COMPANY_QUEUE=${RABBITMQ_COMPANY_QUEUE}
+      - WEBSOCKET_URL=${WEBSOCKET_URL}
+    depends_on:
+      - rabbitmq
+      - mongo
+      - server
 
   go-app-test:
     build:
@@ -28,9 +50,14 @@ services:
     tty: true
     volumes:
       - ./app-golang:/app
-    depends_on:
-      - rabbitmq
-      - mongo
+
+  server:
+    build:
+      context: ./server-ws
+    container_name: server
+    ports:
+      - "8080:8080" 
+    restart: unless-stopped
 
   rabbitmq:
     image: rabbitmq:3-management
