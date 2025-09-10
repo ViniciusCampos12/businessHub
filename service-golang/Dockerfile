@@ -17,6 +17,7 @@ RUN mkdir -p $GOPATH/pkg/mod $GOCACHE && chown -R appuser:appuser /app/.cache
 
 USER appuser
 
+ENV GOPROXY=https://goproxy.io,direct
 COPY --chown=appuser:appuser go.mod go.sum ./
 RUN go mod download
 

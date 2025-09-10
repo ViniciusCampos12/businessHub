@@ -8,6 +8,7 @@ RUN go install github.com/air-verse/air@latest
 RUN go install github.com/swaggo/swag/cmd/swag@latest
 RUN go install gotest.tools/gotestsum@latest
 
+ENV GOPROXY=https://goproxy.io,direct
 COPY go.* ./
 RUN go mod download
 
@@ -26,6 +27,7 @@ FROM golang:1.25-alpine AS build
 
 COPY --from=dev /app/. .
 
+ENV GOPROXY=https://goproxy.io,direct
 RUN CGO_ENABLED=0 GOOS=linux go build -o /app/go-app ./cmd/main.go
 
 FROM alpine:latest AS prod
