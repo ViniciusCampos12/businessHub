@@ -1,6 +1,8 @@
 # BusinessHub
 
-Este projeto é uma aplicação em Go que utiliza Docker, MongoDB e RabbitMQ.
+Este projeto é composto por duas aplicações. A primeira realiza operações e envia logs para uma fila RabbitMQ. A segunda aplicação consome esses logs da fila, armazena em uma coleção de outbox e os transmite em tempo real via WebSockets.
+
+As tecnologias usadas são Go, Node.js, RabbitMQ, MongoDB e WebSockets, e a aplicação é orquestrada com Docker.
 
 ## Pré-requisitos
 
